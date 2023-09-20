@@ -2,7 +2,29 @@ import React, { useRef, useState, useEffect } from "react"
 import "./Map.css";
 import MapContext from "./MapContext";
 import * as ol from "ol";
-import { TileLayer } from "../Layers";
+import { TileLayer, VectorLayer } from "../Layers";
+import {OSM, Vector as VectorSource} from 'ol/source.js';
+import Draw from 'ol/interaction/Draw.js';
+import {Tile as OLTileLayer, Vector as OLVectorLayer} from 'ol/layer.js';
+
+const raster = new OLTileLayer({
+	source: new OSM()
+});
+
+let typeSelectValue = 'Polygon';
+
+const source = new VectorSource({wrapX: false});
+
+const vector = new OLVectorLayer({
+	source: source,
+	style: {
+		'fill-color': 'rgba(255, 255, 255, 0.2)',
+		'stroke-color': '#ffcc33',
+		'stroke-width': 2,
+		'circle-radius': 7,
+		'circle-fill-color': '#ffcc33',
+	  },
+});
 
 const Map = ({ children, zoom, center }) => {
 	const mapRef = useRef();
@@ -12,7 +34,7 @@ const Map = ({ children, zoom, center }) => {
 	useEffect(() => {
 		let options = {
 			view: new ol.View({ zoom, center }),
-			layers: [],
+			layers: [raster, vector],
 			controls: [],
 			overlays: []
 		};
@@ -46,5 +68,19 @@ const Map = ({ children, zoom, center }) => {
 		</MapContext.Provider>
 	)
 }
+
+let draw;
+function addInteraction(typeSelectValue) {
+	const value = typeSelectValue;
+	if (value !== 'None') {
+	  draw = new Draw({
+		source: source,
+		type: typeSelectValue,
+	  });
+	  Map.addInteraction(draw);
+	}
+}
+
+//addInteraction();
 
 export default Map;

@@ -14,8 +14,8 @@ import GeoJSON from "ol/format/GeoJSON";
 import { Controls, FullScreenControl } from "./OpenLayers/Controls";
 import FeatureStyles from "./OpenLayers/Features/Styles";
 import mapConfig from "./map_config.json";
-import Draw from 'ol/interaction/Draw.js';
 import View from 'ol/View.js';
+import Selector from './components/Selector';
 
 function addMarkers(lonLatArray) {
   var iconStyle = new Style({
@@ -74,7 +74,20 @@ const App = () => {
           <FullScreenControl />
         </Controls>
       </Map>
-      
+
+      <div className='flexbox-container'>
+        <div className='general'>
+          <h1>&nbsp;Select draw shape:&nbsp;&nbsp;&nbsp;</h1>
+        </div>
+        <div className='selector-container'>
+          <Selector/>
+        </div>
+      </div>
+
+      <div className='general'>
+        <h1>&nbsp;Parcels: </h1>
+      </div>
+
       {parcels?.length > 0 ? (
         <div>
             {parcels.map((parcel) => (
