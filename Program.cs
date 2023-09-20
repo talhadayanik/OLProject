@@ -30,7 +30,14 @@ builder.Services.AddAuthentication()
 builder.Services.AddControllersWithViews();
 builder.Services.AddRazorPages();
 
+builder.Services.AddCors();
+
 var app = builder.Build();
+
+app.UseCors(options =>
+{
+    options.WithOrigins("https://localhost:44470");
+});
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
