@@ -25,10 +25,10 @@ namespace OLProject.Controllers
         [HttpGet]
         public async Task<ActionResult<IEnumerable<Parcel>>> GetParcels()
         {
-          if (_context.Parcels == null)
-          {
-              return NotFound();
-          }
+            if (_context.Parcels == null)
+            {
+                return NotFound();
+            }
             return await _context.Parcels.ToListAsync();
         }
 
@@ -36,10 +36,10 @@ namespace OLProject.Controllers
         [HttpGet("{id}")]
         public async Task<ActionResult<Parcel>> GetParcel(int id)
         {
-          if (_context.Parcels == null)
-          {
-              return NotFound();
-          }
+            if (_context.Parcels == null)
+            {
+                return NotFound();
+            }
             var parcel = await _context.Parcels.FindAsync(id);
 
             if (parcel == null)
@@ -86,10 +86,10 @@ namespace OLProject.Controllers
         [HttpPost]
         public async Task<ActionResult<Parcel>> PostParcel(Parcel parcel)
         {
-          if (_context.Parcels == null)
-          {
-              return Problem("Entity set 'MyDbContext.Parcels'  is null.");
-          }
+            if (_context.Parcels == null)
+            {
+                return Problem("Entity set 'MyDbContext.Parcels'  is null.");
+            }
             _context.Parcels.Add(parcel);
             await _context.SaveChangesAsync();
 
