@@ -1,9 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Route, Routes } from 'react-router-dom';
 import './custom.css';
 import './App.css';
 import ParcelItem from './components/ParcelItem';
-import Selector from './components/Selector';
 import 'ol/ol.css';
 import Map from 'ol/Map'
 import View from 'ol/View'
@@ -12,14 +10,15 @@ import VectorLayer from 'ol/layer/Vector';
 import WKT from 'ol/format/WKT';
 import { OSM, Vector as VectorSource } from 'ol/source';
 import { Circle as CircleStyle, Fill, Stroke, Style } from 'ol/style';
-import { Draw, Modify, Snap } from 'ol/interaction';
+import { Draw, Snap } from 'ol/interaction';
 import APICaller from './networking/APICaller';
-import { Button, Form, Modal} from 'semantic-ui-react'
+import { Button, Form } from 'semantic-ui-react';
 import ReactModal from 'react-modal';
 
 
 const App = () => {
 
+  const [didLoadOnce, setDidLoadOnce] = useState(false);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [parcels, setParcels] = useState([]);
@@ -27,7 +26,6 @@ const App = () => {
   const [map, setMap] = useState();
   const [raster, setRaster] = useState(new TileLayer({ source: new OSM(), }));
   const [vectorSource, setVectorSource] = useState(new VectorSource());
-  const [modify, setModify] = useState(new Modify({ source: vectorSource }));
   const [format, setFormat] = useState(new WKT());
   const [parcelId, setParcelId] = useState();
   const [province, setProvince] = useState();
@@ -41,24 +39,14 @@ const App = () => {
   var location;
   var feature;
 
-  /*
-  const getAllParcels = async () => {
-    
-    const response = await fetch(`${BASE_URL}/api/Parcels`, {
-      method: 'GET'
-    });
-
-    const data = await response.json();
-  
-    setParcels(data);
-    console.log(JSON.stringify(data));
-  };
-*/
-
   useEffect(() => {
     createMap();
     getAll();
   }, []);
+
+  useEffect(() => {
+    getAll();
+  }, [parcels]);
 
   const vector = new VectorLayer({
     source: vectorSource,
@@ -87,13 +75,13 @@ const App = () => {
     map.addInteraction(draw);
     draw.on('drawend', (event) => {
       feature = event.feature;
-      location = feature.getGeometry().getCoordinates()
-      var x = format.writeFeature(feature);
-      setWkt(wkt = x);
-      if (x) {
-        setIsAddModalOpen(!isAddModalOpen)
+      location = feature.getGeometry().getCoordinates();
+      var formattedWkt = format.writeFeature(feature);
+      setWkt(formattedWkt);
+      if (formattedWkt) {
+        setIsAddModalOpen(!isAddModalOpen);
       }
-      map.getInteractions().pop()
+      map.getInteractions().pop();
     });
     snap = new Snap({ source: vectorSource });
     map.addInteraction(snap);
@@ -111,16 +99,14 @@ const App = () => {
         center: [0.0, 0.0],
         zoom: 2
       })
-    })
+    });
     setMap(initMap);
     initMap.once("rendercomplete", function () {
-      getAll()
+      getAll();
     })
   }
   
-  // save map and vector layer references to state
-
-  const getAll = () => {
+  function getAll(){
     APICaller.getAllParcels().then(data => {
       setParcels(data);
       if (data && data.length > 0) {
@@ -130,12 +116,12 @@ const App = () => {
               dataProjection: 'EPSG:3857',
               featureProjection: 'EPSG:3857',
             });
-            elementFeature.set('Id', element.id)
-            elementFeature.set('Province', element.province)
-            elementFeature.set('District', element.district)
-            elementFeature.set('Neighborhood', element.neighborhood)
-            elementFeature.set('ParcelWkt', element.parcelWkt)
-            vectorSource.addFeature(elementFeature)
+            elementFeature.set('Id', element.id);
+            elementFeature.set('Province', element.province);
+            elementFeature.set('District', element.district);
+            elementFeature.set('Neighborhood', element.neighborhood);
+            elementFeature.set('ParcelWkt', element.parcelWkt);
+            vectorSource.addFeature(elementFeature);
           }
         });
       }
@@ -144,75 +130,74 @@ const App = () => {
 
   const toggleAddModal = () => {
     var f = vectorSource.getFeatures()[vectorSource.getFeatures().length - 1];
-    vectorSource.removeFeature(f);
-    setIsAddModalOpen(!isAddModalOpen)
+    setVectorSource(vectorSource.removeFeature(f));
+    setIsAddModalOpen(!isAddModalOpen);
   }
 
   const toggleEditModal = () => {
-    setIsEditModalOpen(!isEditModalOpen)
+    setIsEditModalOpen(!isEditModalOpen);
   }
 
-  const addParcel = () => {
-    let parcel = { province: province, district: district, neighborhood: neighborhood, parcelWkt: wkt }
+  function addParcel(){
+    let parcel = { province: province, district: district, neighborhood: neighborhood, parcelWkt: wkt };
     APICaller.addParcel(parcel).then((res) => {
-      setParcelId("")
-      setProvince("")
-      setDistrict("")
-      setNeighborhood("")
-      setParcelWkt("")
-      console.log(res)
+      setParcelId("");
+      setProvince("");
+      setDistrict("");
+      setNeighborhood("");
+      setParcelWkt("");
+      console.log(res);
     })
-    setIsAddModalOpen(!isAddModalOpen)
-    //service.liste().then(result => { setParselLists(result.data) })
-    getAll()
+    setIsAddModalOpen(!isAddModalOpen);
+    getAll();
   }
 
   const edit = () => {
-    map.getInteractions().forEach(x => x.setActive(false)); //Interactions özelliğini kapatır
+    map.getInteractions().forEach(x => x.setActive(false));
     map.on("dblclick", function (e) {
       map.forEachFeatureAtPixel(e.pixel, function (feature) {
-        setParcelId(feature.values_.Id)
-        setProvince(feature.values_.Province)
-        setDistrict(feature.values_.District)
-        setNeighborhood(feature.values_.Neighborhood)
-        setParcelWkt(feature.values_.ParcelWkt)
-        setIsEditModalOpen(!isEditModalOpen)
+        setParcelId(feature.values_.Id);
+        setProvince(feature.values_.Province);
+        setDistrict(feature.values_.District);
+        setNeighborhood(feature.values_.Neighborhood);
+        setParcelWkt(feature.values_.ParcelWkt);
+        setIsEditModalOpen(!isEditModalOpen);
       })
     })
   }
 
   function editAParcel(parcel){
-    setParcelId(parcel.id)
-    setProvince(parcel.province)
-    setDistrict(parcel.district)
-    setNeighborhood(parcel.neighborhood)
-    setParcelWkt(parcel.parcelWkt)
-    setIsEditModalOpen(!isEditModalOpen)
+    setParcelId(parcel.id);
+    setProvince(parcel.province);
+    setDistrict(parcel.district);
+    setNeighborhood(parcel.neighborhood);
+    setParcelWkt(parcel.parcelWkt);
+    setIsEditModalOpen(!isEditModalOpen);
   }
   
 
   const deleteParcel = () => {
     APICaller.delete(parcelId).then((res) => {
-      console.log(res)
+      console.log(res);
     });
     setIsEditModalOpen(!isEditModalOpen)
     vectorSource.clear();
     getAll();
-  }
+  };
 
   const updateParcel = (e) => {
     let parcel = { Id: parcelId, Province: province, District: district, Neighborhood: neighborhood, ParcelWkt: parcelWkt }
     APICaller.update(parcel).then((res) => {
-      console.log(res)
-      setParcelId("")
-      setProvince("")
-      setDistrict("")
-      setNeighborhood("")
-      setParcelWkt("")
+      console.log(res);
+      setParcelId("");
+      setProvince("");
+      setDistrict("");
+      setNeighborhood("");
+      setParcelWkt("");
     })
     vectorSource.clear();
     getAll();
-    setIsEditModalOpen(!isEditModalOpen)
+    setIsEditModalOpen(!isEditModalOpen);
   }
 
   return(
