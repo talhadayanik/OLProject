@@ -1,5 +1,4 @@
 import React from "react";
-import App from "../App"
 
 const ParcelItem = ({parcel}) => {
     return(
@@ -10,3 +9,6 @@ const ParcelItem = ({parcel}) => {
 }
 
 export default ParcelItem;
+
+
+

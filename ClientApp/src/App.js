@@ -18,9 +18,8 @@ import ReactModal from 'react-modal';
 
 const App = () => {
 
-  const [didLoadOnce, setDidLoadOnce] = useState(false);
-  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
-  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false); //Yeni veri Modal'ının açılmasını kontrol eder.
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false); //Güncelleme Modal'ının açılmasını kontrol eder.
   const [parcels, setParcels] = useState([]);
   const mapRef = useRef();
   const [map, setMap] = useState();
@@ -76,16 +75,19 @@ const App = () => {
     draw.on('drawend', (event) => {
       feature = event.feature;
       location = feature.getGeometry().getCoordinates();
+      console.log(location);
       var formattedWkt = format.writeFeature(feature);
       setWkt(formattedWkt);
       if (formattedWkt) {
         setIsAddModalOpen(!isAddModalOpen);
+      }else{
+        map.getInteractions().pop();
       }
-      map.getInteractions().pop();
     });
     snap = new Snap({ source: vectorSource });
     map.addInteraction(snap);
   }
+
 
   const createMap = () => {
     const initMap = new Map({
@@ -103,7 +105,7 @@ const App = () => {
     setMap(initMap);
     initMap.once("rendercomplete", function () {
       getAll();
-    })
+    });
   }
   
   function getAll(){
@@ -128,12 +130,15 @@ const App = () => {
     })
   }
 
+  //Yeni veri Modal'ı için
   const toggleAddModal = () => {
+    //Son çizimi yani feature'ı eklenmediği için siler.
     var f = vectorSource.getFeatures()[vectorSource.getFeatures().length - 1];
     setVectorSource(vectorSource.removeFeature(f));
     setIsAddModalOpen(!isAddModalOpen);
   }
 
+  //Güncelleme Modal'ı için
   const toggleEditModal = () => {
     setIsEditModalOpen(!isEditModalOpen);
   }
@@ -181,12 +186,12 @@ const App = () => {
       console.log(res);
     });
     setIsEditModalOpen(!isEditModalOpen)
-    vectorSource.clear();
     getAll();
   };
 
   const updateParcel = (e) => {
-    let parcel = { Id: parcelId, Province: province, District: district, Neighborhood: neighborhood, ParcelWkt: parcelWkt }
+    let parcel = { Id: parcelId, Province: province, District: district, Neighborhood: neighborhood,
+       ParcelWkt: parcelWkt }
     APICaller.update(parcel).then((res) => {
       console.log(res);
       setParcelId("");
@@ -287,9 +292,7 @@ const App = () => {
       <ReactModal
         isOpen={isEditModalOpen}
         contentLabel='Edit Parcel'
-        ariaHideApp={true}
-      >
-
+        ariaHideApp={true}>
           <Form>
             <Form.Field>
               <input
@@ -316,7 +319,6 @@ const App = () => {
           <Button primary onClick={() => updateParcel()}>Update</Button>
           <Button negative onClick={() => deleteParcel()}>Delete</Button>
           <Button onClick={() => toggleEditModal()}> Cancel</Button>
-        
       </ReactModal>
 
     </>    
